@@ -52,4 +52,5 @@ RDoc::Task.new do |rdoc|
   rdoc.title = "status_enumerator #{version}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
+  rdoc.options = ["--charset", "utf-8", "--line-numbers"]
 end
