@@ -25,13 +25,15 @@ This class provides a function to enumerate it, but it is not the object which i
     ".document",
     ".rspec",
     "Gemfile",
+    "Gemfile.lock",
     "LICENSE.txt",
     "README.rdoc",
     "Rakefile",
     "VERSION",
     "lib/status_enumerator.rb",
     "spec/spec_helper.rb",
-    "spec/status_enumerator_spec.rb"
+    "spec/status_enumerator_spec.rb",
+    "status_enumerator.gemspec"
   ]
   s.homepage = %q{http://github.com/Ktouth/status_enumerator}
   s.licenses = [%q{MIT}]
