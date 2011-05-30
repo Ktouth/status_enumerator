@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{status_enumerator}
-  s.version = "0.0.1"
+  s.version = "0.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Keiichiro Nishi}]
@@ -38,6 +38,7 @@ This class provides a function to enumerate it, but it is not the object which i
   s.homepage = %q{http://github.com/Ktouth/status_enumerator}
   s.licenses = [%q{MIT}]
   s.require_paths = [%q{lib}]
+  s.required_ruby_version = Gem::Requirement.new(">= 1.8.7")
   s.rubygems_version = %q{1.8.4}
   s.summary = %q{This class provides an enumeration function to have the object which I added tree information to in an argument}
 
