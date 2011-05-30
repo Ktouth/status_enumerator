@@ -12,7 +12,7 @@ class StatusEnumerator
       c += 1
       if c == 3
         n = stat.send(:put_prev)
-        stat.instance_eval { @first_p = true }
+        stat.send(:set_flags, true, false)
         yield stat
         stat.send(:put_next, n)
         yield stat
@@ -20,23 +20,23 @@ class StatusEnumerator
         yield stat
       end
     end.tap do
-      case c
-      when 0
-        ;
-      when 1
-        stat.send(:put_next)
-        stat.instance_eval { @first_p = @last_p = true }
-        yield stat
-      when 2
-        stat.instance_eval { @first_p, @last_p = true, false }
-        yield stat
-        stat.send(:put_next)
-        stat.instance_eval { @last_p = true }
-        yield stat
-      else
-        stat.send(:put_next)
-        stat.instance_eval { @last_p = true }
-        yield stat
+      if c > 0
+        case c
+        when 1
+          stat.send(:put_next)
+          stat.send(:set_flags, true, true)
+          yield stat
+        when 2
+          stat.send(:set_flags, true, false)
+          yield stat
+          stat.send(:put_next)
+          stat.send(:set_flags, false, true)
+          yield stat
+        else
+          stat.send(:put_next)
+          stat.send(:set_flags, false, true)
+          yield stat
+        end
       end
     end
   end
@@ -62,6 +62,9 @@ class StatusEnumerator
       @prev, @current, @next, _next = obj, @prev, @current, @next
       @last_p = false
       _next
+    end
+    def set_flags(first, last)
+      @first_p, @last_p = first, last
     end
   end
 end

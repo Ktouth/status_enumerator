@@ -27,6 +27,7 @@ This class provides a function to enumerate it, but it is not the object which i
 ENDE
   gem.email = "ktouth@k-brand.gr.jp"
   gem.authors = ["Keiichiro Nishi"]
+  gem.required_ruby_version = '>= 1.8.7'
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
