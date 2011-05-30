@@ -1,3 +1,5 @@
+require 'forwardable'
+
 class StatusEnumerator
   def initialize(target)
     raise ArgumentError, '%s is not redpond to #each' % target.class.name if target.nil? or !target.respond_to?(:each)
@@ -6,42 +8,47 @@ class StatusEnumerator
   
   def each
     raise ArgumentError, 'no block given' unless block_given?
-    c, stat = 0, Status.new
+    c = 0
     @target.each do |i|
-      stat.send(:put_next, i)
+      put_next i
       c += 1
       if c == 3
-        n = stat.send(:put_prev)
-        stat.send(:set_flags, true, false)
-        yield stat
-        stat.send(:put_next, n)
-        yield stat
+        n = put_prev
+        set_flags true, false
+        yield element_status
+        put_next n
+        yield element_status
       elsif c > 2
-        yield stat
+        yield element_status
       end
     end.tap do
       if c > 0
         case c
         when 1
-          stat.send(:put_next)
-          stat.send(:set_flags, true, true)
-          yield stat
+          put_next
+          set_flags true, true
+          yield element_status
         when 2
-          stat.send(:set_flags, true, false)
-          yield stat
-          stat.send(:put_next)
-          stat.send(:set_flags, false, true)
-          yield stat
+          set_flags true, false
+          yield element_status
+          put_next
+          set_flags false, true
+          yield element_status
         else
-          stat.send(:put_next)
-          stat.send(:set_flags, false, true)
-          yield stat
+          put_next
+          set_flags false, true
+          yield element_status
         end
       end
     end
   end
 
-  class Status # :nodoc:
+  extend Forwardable
+  def element_status; @status ||= Status.new end
+  def_delegators :element_status, :put_next, :put_prev, :set_flags
+  private :put_next, :put_prev, :set_flags
+
+  class Status
     attr_reader :current, :prev, :next
     def first?; !!@first_p end
     def last?; !!@last_p end
