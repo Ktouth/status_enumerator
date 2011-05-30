@@ -6,8 +6,62 @@ class StatusEnumerator
   
   def each
     raise ArgumentError, 'no block given' unless block_given?
+    c, stat = 0, Status.new
     @target.each do |i|
-      yield
+      stat.send(:put_next, i)
+      c += 1
+      if c == 3
+        n = stat.send(:put_prev)
+        stat.instance_eval { @first_p = true }
+        yield stat
+        stat.send(:put_next, n)
+        yield stat
+      elsif c > 2
+        yield stat
+      end
+    end.tap do
+      case c
+      when 0
+        ;
+      when 1
+        stat.send(:put_next)
+        stat.instance_eval { @first_p = @last_p = true }
+        yield stat
+      when 2
+        stat.instance_eval { @first_p, @last_p = true, false }
+        yield stat
+        stat.send(:put_next)
+        stat.instance_eval { @last_p = true }
+        yield stat
+      else
+        stat.send(:put_next)
+        stat.instance_eval { @last_p = true }
+        yield stat
+      end
+    end
+  end
+
+  class Status # :nodoc:
+    attr_reader :current, :prev, :next
+    def first?; !!@first_p end
+    def last?; !!@last_p end
+
+    private
+
+    def initialize
+      @prev = @current = @next = nil
+      @first_p = @last_p = true
+    end
+    
+    def put_next(obj = nil)
+      _prev, @prev, @current, @next = @prev, @current, @next, obj
+      @first_p = false
+      _prev
+    end
+    def put_prev(obj = nil)
+      @prev, @current, @next, _next = obj, @prev, @current, @next
+      @last_p = false
+      _next
     end
   end
 end
