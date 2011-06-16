@@ -44,18 +44,26 @@ class StatusEnumerator
   end
 
   extend Forwardable
-  def element_status; @status ||= Status.new end
+  def element_status; @status ||= Status.send(:new, nil) { } end
   def_delegators :element_status, :put_next, :put_prev, :set_flags
   private :put_next, :put_prev, :set_flags
 
   class Status
+    class <<self
+      private :new
+    end
+
     attr_reader :current, :prev, :next
     def first?; !!@first_p end
     def last?; !!@last_p end
 
     private
 
-    def initialize
+    def initialize(owner, &block)
+      raise ArgumentError, '%s is not kind of StatusEnumerator::Status' % owner.inspect unless owner.nil? or owner.kind_of?(StatusEnumerator::Status)
+      raise ArgumentError, 'block not given' if owner.nil? and block.nil?
+      @owner, @block = owner, block || owner.instance_variable_get(:@block)
+
       @prev = @current = @next = nil
       @first_p = @last_p = true
     end
