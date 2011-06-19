@@ -7,8 +7,10 @@ class StatusEnumerator
   end
 
   def each(&block)
-    Status.send(:new, nil, &block).send(:each_status, @target)
+    status_class.send(:new, nil, &block).send(:each_status, @target)
   end
+
+  def status_class; Status end
 
   class Status
     class <<self

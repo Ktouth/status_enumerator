@@ -158,4 +158,10 @@ describe StatusEnumerator do
       end
     end
   end
+
+  describe '#status_class' do
+    it 'gives back Status' do
+      StatusEnumerator.new([]).status_class.should == StatusEnumerator::Status
+    end
+  end
 end
