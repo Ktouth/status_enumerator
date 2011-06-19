@@ -67,6 +67,42 @@ class StatusEnumerator
       @prev = @current = @next = nil
       @first_p = @last_p = true
     end
+
+    def each_status(enum)
+      c = 0
+      enum.each do |i|
+        put_next i
+        c += 1
+        if c == 3
+          n = put_prev
+          set_flags true, false
+          @block.call(self)
+          put_next n
+          @block.call(self)
+        elsif c > 2
+          @block.call(self)
+        end
+      end.tap do
+        if c > 0
+          case c
+          when 1
+            put_next
+            set_flags true, true
+            @block.call(self)
+          when 2
+            set_flags true, false
+            @block.call(self)
+            put_next
+            set_flags false, true
+            @block.call(self)
+          else
+            put_next
+            set_flags false, true
+            @block.call(self)
+          end
+        end
+      end
+    end
     
     def put_next(obj = nil)
       _prev, @prev, @current, @next = @prev, @current, @next, obj
