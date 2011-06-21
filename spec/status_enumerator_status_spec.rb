@@ -73,12 +73,97 @@ describe StatusEnumerator::Status do
     end
   end
 
+  describe '#into(enum, &block)' do
+    before :all do
+      @enum = [:sas, :res, 132.5, 'test', [1, [2, 3, 4, 5]], /sample/, [100, 99, 98, 90, 80, 50], true, [nil, Class], false]
+      @enum_values = @enum.flatten
+    end
+    before do
+      @array = []
+      @call = lambda {}
+      @root_caller = lambda do |e|
+        e.current.tap {|x| @array.push(x.is_a?(Array) ? x[0] : x) }
+        @call.call(e) if @call
+      end
+      @each = status_new(nil, &@root_caller)
+    end
+
+    it 'raise not parameter' do
+      lambda { @each.into }.should raise_error(ArgumentError)
+    end
+
+    it 'raise not enumerable parameter' do
+      lambda { @each.into(Time.now) }.should raise_error(ArgumentError)
+    end
+
+    it 'raise nil parameter' do
+      lambda { @each.into(nil) }.should raise_error(ArgumentError)
+    end
+    
+    it 'call a handed block' do
+      block, func = nil, lambda {|e| block = e.instance_variable_get(:@block) }
+      @each.into((2..10).to_a, &func)
+      block.should == func
+    end
+    
+    it 'call @block when a block is omitted' do
+      block = nil
+      @call = lambda {|e| block = e.instance_variable_get(:@block) }
+      @each.into((2..10).to_a)
+      block.should == @root_caller
+    end
+
+    it 'is call #each_status' do
+      arg, status, result = (2..10).to_a, status_new(nil) {}, :ok!
+      StatusEnumerator::Status.should_receive(:new).with(@each).and_return(status)
+      status.should_receive(:each_status).with(arg).and_return(result)
+      @each.into(arg).should == :ok!
+    end
+    
+    it 'The instance of the block argument is different from it' do
+      obj = nil
+      @each.into([1]) {|x| obj = x }
+      obj.should be_kind_of(StatusEnumerator::Status)
+      obj.should_not == @each
+    end
+  end
+  
   describe do
     before :all do
       @enum_single = [1]
       @enum_double = [156.3, :ee]
       @enum_triple = ['sam', /ple/, true]
       @enum_many = [:a, 2, 3.0, 'd', /e/, true, nil, false, 'sample', 10]
+      @enum_hierarchical = [
+        Foo.new(15232, 
+          Foo.new('bad', 'test', :que, 1562, nil, true),
+          Foo.new(:clean)
+        ),
+        Foo.new(Enumerable,
+          Foo.new(111,
+            Foo.new(/Win/, 222, 333, 444)
+          ),
+          'e', 'f', 'g',
+          Foo.new('a', 'b', 'c', 'd')
+        ),
+        999,
+        :a,
+        Foo.new(:b, false, nil, true)
+      ]
+      @enum_hierarchical_flatten = [
+        15232,
+          'bad', 'test', :que, 1562, nil, true,
+          :clean,
+        Enumerable,
+          111,
+            /Win/, 222, 333, 444,
+          'e', 'f', 'g',
+          'a', 'b', 'c', 'd',
+        999,
+        :a,
+        :b, false, nil, true
+      ]
+      Foo.conv(@enum_hierarchical).should == @enum_hierarchical_flatten
     end
     before do
       @count, @result, @call = 0, [], lambda { }

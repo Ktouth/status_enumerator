@@ -19,12 +19,17 @@ class StatusEnumerator
     def first?; !!@first_p end
     def last?; !!@last_p end
 
+    def into(enum, &block)
+      raise ArgumentError, '%s is not redpond to #each' % enum.class.name if enum.nil? or !enum.respond_to?(:each)
+      self.class.send(:new, self, &block).send(:each_status, enum)
+    end
+    
     private
 
     def initialize(owner, &block)
       raise ArgumentError, '%s is not kind of StatusEnumerator::Status' % owner.inspect unless owner.nil? or owner.kind_of?(StatusEnumerator::Status)
       raise ArgumentError, 'block not given' if owner.nil? and block.nil?
-      @owner, @block = owner, block || owner.instance_variable_get(:@block)
+      @owner, @block = owner, (block || owner.instance_variable_get(:@block))
 
       @prev = @current = @next = nil
       @first_p = @last_p = true
