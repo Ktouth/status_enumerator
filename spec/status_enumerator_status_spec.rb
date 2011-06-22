@@ -164,17 +164,19 @@ describe StatusEnumerator::Status do
         :b, false, nil, true
       ]
       Foo.conv(@enum_hierarchical).should == @enum_hierarchical_flatten
+      @enum_hierarchical_flatten_size = @enum_hierarchical_flatten.size
     end
     before do
       @count, @result, @call = 0, [], lambda { }
       @each = status_new(nil) do |e|
         @result.push @call.call(e)
         @count += 1
+        e.into(e.current.children) if e.current.is_a?(Foo)
       end
     end
-    def do_each(enum)
+    def do_each(enum, into = nil)
       @each.send(:each_status, enum)
-      @count.should == enum.size
+      @count.should == (into || enum.size)
       @result
     end
 
@@ -205,6 +207,10 @@ describe StatusEnumerator::Status do
       it 'puts back true to only the first value(many ary)' do
         do_each(@enum_many).should == make_result(@enum_many)
       end
+
+      it 'puts back true to only the first value(hierarchical ary)' do
+        do_each(@enum_hierarchical, @enum_hierarchical_flatten_size).should == Foo.conv(@enum_hierarchical) {|x| make_result(x) }
+      end
     end
 
     describe '#last?' do
@@ -234,11 +240,15 @@ describe StatusEnumerator::Status do
       it 'puts back true to only the last value(many ary)' do
         do_each(@enum_many).should == make_result(@enum_many)
       end
+
+      it 'puts back true to only the last value(hierarchical ary)' do
+        do_each(@enum_hierarchical, @enum_hierarchical_flatten_size).should == Foo.conv(@enum_hierarchical) {|x| make_result(x) }
+      end
     end
 
     describe '#current' do
       before do
-        @call = lambda {|x| x.current }
+        @call = lambda {|x| x.current.is_a?(Foo) ? x.current.value : x.current }
       end
       def make_result(enum)
         enum
@@ -263,11 +273,19 @@ describe StatusEnumerator::Status do
       it 'puts back true to only the current value(many ary)' do
         do_each(@enum_many).should == make_result(@enum_many)
       end
+
+      it 'puts back true to only the current value(hierarchical ary)' do
+        do_each(@enum_hierarchical, @enum_hierarchical_flatten_size).should == @enum_hierarchical_flatten
+      end
+
+      it 'puts back true to only the current value(hierarchical ary)' do
+        do_each(@enum_hierarchical, @enum_hierarchical_flatten_size).should == Foo.conv(@enum_hierarchical) {|x| make_result(x) }
+      end
     end
 
     describe '#prev' do
       before do
-        @call = lambda {|x| x.prev }
+        @call = lambda {|x| x.prev.is_a?(Foo) ? x.prev.value : x.prev }
       end
       def make_result(enum)
         enum.dup.tap {|x| x.pop; x.unshift nil }
@@ -292,11 +310,15 @@ describe StatusEnumerator::Status do
       it 'puts back true to only the prev value(many ary)' do
         do_each(@enum_many).should == make_result(@enum_many)
       end
+
+      it 'puts back true to only the prev value(hierarchical ary)' do
+        do_each(@enum_hierarchical, @enum_hierarchical_flatten_size).should == Foo.conv(@enum_hierarchical) {|x| make_result(x) }
+      end
     end
 
     describe '#next' do
       before do
-        @call = lambda {|x| x.next }
+        @call = lambda {|x| x.next.is_a?(Foo) ? x.next.value : x.next }
       end
       def make_result(enum)
         enum.dup.tap {|x| x.shift; x.push nil }
@@ -320,6 +342,10 @@ describe StatusEnumerator::Status do
       
       it 'puts back true to only the next value(many ary)' do
         do_each(@enum_many).should == make_result(@enum_many)
+      end
+
+      it 'puts back true to only the next value(hierarchical ary)' do
+        do_each(@enum_hierarchical, @enum_hierarchical_flatten_size).should == Foo.conv(@enum_hierarchical) {|x| make_result(x) }
       end
     end
   end

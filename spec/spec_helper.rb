@@ -21,7 +21,7 @@ class Foo
     ret = ary.map {|x| x.kind_of?(self) ? x.value : x }
     ret = block.call(ret) if block
     ary.each_with_index do |obj, i|
-      if obj.kind_of?(self)
+      if obj.kind_of?(self) and !obj.children.empty?
         o = conv(obj.children, &block)
         o.unshift ret[i]
         ret[i] = o
