@@ -16,18 +16,28 @@ class Foo
     @value, @children = value, args
   end
   attr_reader :value, :children
-  
-  def self.conv(ary, &block)
-    ret = ary.map {|x| x.kind_of?(self) ? x.value : x }
-    ret = block.call(ret) if block
-    ary.each_with_index do |obj, i|
-      if obj.kind_of?(self) and !obj.children.empty?
-        o = conv(obj.children, &block)
-        o.unshift ret[i]
-        ret[i] = o
-      end
+
+  class <<self
+    def conv(ary)
+      block = block_given? ? lambda {|x, a| yield x } : nil
+      conv_as(ary, [], &block)
     end
-    ret.flatten!
-    ret
+    def conv_with_ancestors(ary, &block); conv_as(ary, [], &block) end
+
+    private
+
+    def conv_as(ary, ancestors, &block)
+      ret = ary.map {|x| x.kind_of?(self) ? x.value : x }
+      ret = block.call(ret, ancestors) if block
+      ary.each_with_index do |obj, i|
+        if obj.kind_of?(self) and !obj.children.empty?
+          o = conv_as(obj.children, ancestors + [obj.value], &block)
+          o.unshift ret[i]
+          ret[i] = o
+        end
+      end
+      ret.flatten!
+      ret
+    end
   end
 end
