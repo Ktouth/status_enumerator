@@ -15,7 +15,7 @@ class StatusEnumerator
       private :new
     end
 
-    attr_reader :current, :prev, :next
+    attr_reader :current, :prev, :next, :parent_status
     def first?; !!@first_p end
     def last?; !!@last_p end
 
@@ -26,10 +26,10 @@ class StatusEnumerator
     
     private
 
-    def initialize(owner, &block)
-      raise ArgumentError, '%s is not kind of StatusEnumerator::Status' % owner.inspect unless owner.nil? or owner.kind_of?(StatusEnumerator::Status)
-      raise ArgumentError, 'block not given' if owner.nil? and block.nil?
-      @owner, @block = owner, (block || owner.instance_variable_get(:@block))
+    def initialize(parent_status, &block)
+      raise ArgumentError, '%s is not kind of StatusEnumerator::Status' % parent_status.inspect unless parent_status.nil? or parent_status.kind_of?(StatusEnumerator::Status)
+      raise ArgumentError, 'block not given' if parent_status.nil? and block.nil?
+      @parent_status, @block = parent_status, (block || parent_status.instance_variable_get(:@block))
 
       @prev = @current = @next = nil
       @first_p = @last_p = true

@@ -7,7 +7,7 @@ describe StatusEnumerator::Status do
     StatusEnumerator::Status.should be_instance_of(Class)
   end
 
-  describe '.new(owner, &block)' do
+  describe '.new(parent_status, &block)' do
     it 'is private' do
       StatusEnumerator::Status.tap do |x|
         x.should be_respond_to(:new, true)
@@ -15,16 +15,16 @@ describe StatusEnumerator::Status do
       end
     end
     
-    it 'stores owner in @owner' do
+    it 'stores parent_status in @parent_status' do
       owner = status_new(nil) {}
-      status_new(owner) {}.instance_variable_get(:@owner).should == owner
+      status_new(owner) {}.instance_variable_get(:@parent_status).should == owner
     end
 
-    it 'permits owner of nil' do
+    it 'permits parent_status of nil' do
       lambda { status_new(nil) {} }.should_not raise_error
     end
 
-    it 'when owner is not kind of Status, it raises an ArgumentError' do
+    it 'when parent_status is not kind of Status, it raises an ArgumentError' do
       lambda { status_new(:symbol) {} }.should raise_error(ArgumentError)
     end
     
@@ -38,7 +38,7 @@ describe StatusEnumerator::Status do
       status_new(status_new(nil, &func)).instance_variable_get(:@block).should == func
     end
 
-    it 'in the case of owner and block is nil, it raises an ArgumentError' do
+    it 'in the case of parent_status and block is nil, it raises an ArgumentError' do
       lambda { status_new(nil) }.should raise_error(ArgumentError)
     end
   end
@@ -346,6 +346,63 @@ describe StatusEnumerator::Status do
 
       it 'puts back true to only the next value(hierarchical ary)' do
         do_each(@enum_hierarchical, @enum_hierarchical_flatten_size).should == Foo.conv(@enum_hierarchical) {|x| make_result(x) }
+      end
+    end
+
+    describe '#parent_status' do
+      before do
+        @call = lambda do |x|
+          if y = x.parent_status
+            y.current.is_a?(Foo) ? y.current.value : y.current
+          else
+            nil
+          end
+        end
+      end
+      def make_result(enum)
+        Array.new(enum.size, nil)
+      end
+
+      it 'initalized nil' do
+        @each.parent_status.should be_nil
+      end
+      
+      it 'gives back the status information of the pro-element(single ary)' do
+        do_each(@enum_single).should == make_result(@enum_single)
+      end
+      
+      it 'gives back the status information of the pro-element(double ary)' do
+        do_each(@enum_double).should == make_result(@enum_double)
+      end
+      
+      it 'gives back the status information of the pro-element(triple ary)' do
+        do_each(@enum_triple).should == make_result(@enum_triple)
+      end
+      
+      it 'gives back the status information of the pro-element(many ary)' do
+        do_each(@enum_many).should == make_result(@enum_many)
+      end
+
+      it 'gives back the status information of the pro-element(hierarchical ary)' do
+        result = Foo.conv_with_ancestors(@enum_hierarchical) do |x, ary|
+          Array.new(x.size, ary.last)
+        end
+        do_each(@enum_hierarchical, @enum_hierarchical_flatten_size).should == result
+      end
+      
+      it 'gives back a thing unlike x in instance of StatusEnumerator::Status or nil' do
+        mode = Foo.conv_with_ancestors(@enum_hierarchical) do |x, ary|
+          Array.new(x.size, !ary.empty?)
+        end
+        @call = lambda do |x|
+          if mode.shift
+            x.parent_status.should be_kind_of(StatusEnumerator::Status)
+            x.parent_status.should_not == x
+          else
+            x.parent_status.should be_nil
+          end
+        end
+        do_each(@enum_hierarchical, @enum_hierarchical_flatten_size)
       end
     end
   end
