@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{status_enumerator}
-  s.version = "0.0.3"
+  s.version = "0.0.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Keiichiro Nishi}]
-  s.date = %q{2011-06-19}
+  s.date = %q{2011-06-26}
   s.description = %q{This class provides an enumeration function to have the object which I added tree information to in an argument.
 The instance receives an enumerable object and provides #each and #each_method. The #each method calls a block in an argument in own. The #each_method method calls the method of an object appointed own in an argument.
 I have the information of the object equal to the ancestors in own and front and back and hierarchy structure, and a block and the argument handed to a method maintain the state flag in the enumeration again.
